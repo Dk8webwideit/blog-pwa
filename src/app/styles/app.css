@@ -1,0 +1,40 @@
+/*_______________ ______________________ CUSTOM */
+
+html,
+body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+
+html {
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ai-cursor {
+    cursor: pointer !important;
+}
+
+.ai-caps {
+    text-transform: capitalize !important;
+}
+
+.ai-all-caps {
+    text-transform: uppercase !important;
+}
+
+form .w3-row-padding,
+form .w3-row-padding>.w3-col {
+    padding: 0px 4px;
+}
+
+.one_char
+{
+    font-family: monospace !important;
+    text-transform: capitalize;
+    width: 1ch;
+    overflow: hidden;
+    white-space: nowrap;
+}
