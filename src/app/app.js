@@ -1,6 +1,7 @@
 import React from "react";
 import { render } from "react-dom";
 import { checkAuthuser } from "services/authService";
+import registerServiceWorker from "./registerServiceWorker";
 
 import Main from "./Main";
 
@@ -11,5 +12,6 @@ const renderApp = () => {
 
 //renderApp();
 window.addEventListener("DOMContentLoaded", function() {
+  registerServiceWorker();
   renderApp(checkAuthuser());
 });

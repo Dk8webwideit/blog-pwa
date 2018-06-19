@@ -5,17 +5,43 @@ import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import { Icon, ButtonBase } from "@material-ui/core";
+import striptags from "striptags";
+import {
+  Icon,
+  ButtonBase,
+  Paper,
+  Grid,
+  Card,
+  CardActions,
+  CardMedia,
+  CardContent
+} from "@material-ui/core";
 
 //App
 import { login, user, logout } from "services/authService";
+import { execApi } from "services/apiService";
 
 class HomeView extends Component {
+  state = {
+    blogs: []
+  };
+
   componentDidMount() {
-    console.log("User", this.props.authUser);
+    execApi("GET", "blogs").then(res => {
+      if (res.error) {
+        return console.log("Error occured", res.data);
+      }
+      let blogs = [];
+      res.data.forEach(function(doc) {
+        blogs.push(doc.data());
+      });
+      return this.setState({ blogs });
+    });
   }
+
   render() {
     let { classes, authUser } = this.props;
+    let { blogs = [] } = this.state;
     return (
       <div className="App">
         <header className="App-header">
@@ -65,6 +91,44 @@ class HomeView extends Component {
             </Button>
           ) : null}
         </div>
+        <div className={classes.container}>
+          <Grid container spacing={24}>
+            {blogs.map(blog => {
+              console.log("Blog", blog);
+              return (
+                <Grid item xs={6} sm={3} key={blog.id}>
+                  <Card className={classes.card}>
+                    <CardMedia
+                      className={classes.media}
+                      image={blog.banner}
+                      title="Contemplative Reptile"
+                    />
+                    <CardContent>
+                      <Typography
+                        gutterBottom
+                        variant="headline"
+                        component="h2"
+                      >
+                        {blog.name}
+                      </Typography>
+                      <Typography component="p">
+                        {striptags(blog.description)}
+                      </Typography>
+                    </CardContent>
+                    <CardActions>
+                      <Button size="small" color="primary">
+                        Share
+                      </Button>
+                      <Button size="small" color="primary">
+                        Learn More
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </div>
       </div>
     );
   }
@@ -95,6 +159,13 @@ const styles = {
     marginTop: 16,
     right: 0,
     float: "left"
+  },
+  card: {
+    maxWidth: 345
+  },
+  media: {
+    height: 0,
+    paddingTop: "56.25%" // 16:9
   }
 };
 

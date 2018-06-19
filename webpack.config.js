@@ -5,12 +5,14 @@ const PreloadWebpackPlugin = require("preload-webpack-plugin");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const path = require("path");
 const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
+const ManifestPlugin = require("webpack-manifest-plugin");
+const SWPrecacheWebpackPlugin = require("sw-precache-webpack-plugin");
 
 const ENV = process.env.npm_lifecycle_event;
 const isProd = ENV === "build";
 
 //const lanIP = '192.168.0.116';
-const lanIP = "192.168.1.112";
+const lanIP = "192.168.1.130";
 //const lanIP = '0.0.0.0';
 const lanPORT = 5001;
 
@@ -133,6 +135,10 @@ module.exports = (function makeWebpackConfig() {
         debug: false
       }),
 
+      new ManifestPlugin({
+        fileName: "asset-manifest.json" // Not to confuse with manifest.json
+      }),
+
       /* new webpack.optimize.UglifyJsPlugin({
                  compress: {
                      warnings: false,
@@ -147,6 +153,15 @@ module.exports = (function makeWebpackConfig() {
             drop_console: false
           }
         }
+      }),
+
+      new SWPrecacheWebpackPlugin({
+        cacheId: "blog-pwa",
+        dontCacheBustUrlsMatching: /\.\w{8}\./,
+        filename: "service-worker.js",
+        minify: true,
+        navigateFallback: publicPath + "index.html",
+        staticFileGlobsIgnorePatterns: [/\.map$/, /asset-manifest\.json$/]
       }),
 
       new CopyWebpackPlugin(

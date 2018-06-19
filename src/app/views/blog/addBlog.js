@@ -14,6 +14,7 @@ import {
   Grid,
   IconButton,
   Tooltip,
+  LinearProgress,
   MenuItem
 } from "@material-ui/core";
 
@@ -22,6 +23,7 @@ import "react-quill/dist/quill.snow.css";
 //App
 import { user, login, logout } from "services/authService";
 import { execApi } from "services/apiService";
+import { uploadFile } from "../../services/storageService";
 
 const modules = {
   toolbar: [
@@ -49,12 +51,15 @@ class AddBlog extends Component {
       name: null,
       description: null,
       banner: null,
-      isActive: false,
+      isActive: "",
       category: "",
       categories: null,
       banner: null
-    }
+    },
+    file: null,
+    loader: false
   };
+
   componentDidMount() {
     execApi("GET", "categories").then(res => {
       if (res.error) {
@@ -70,8 +75,10 @@ class AddBlog extends Component {
 
   handleChange = name => event => {
     if (name === "banner") {
-      let file = event.target.files[0];
-      this.setState({ banner });
+      this.setState(
+        { file: event.target.files[0] },
+        console.log("Banner", this.state)
+      );
     }
     let value = name === "description" ? event : event.target.value;
     this.setState({
@@ -80,19 +87,35 @@ class AddBlog extends Component {
   };
 
   handleSubmit = () => {
-    let { credentials } = this.state;
-    if (credentials.name) {
-      execApi("POST", "blogs", credentials).then(res => {
-        if (res.error) {
-          return console.log("Error occured", res.data);
-        }
-        return alert("Data added");
-      });
+    this.setState({ loader: true });
+    let { credentials, file } = this.state;
+    if (file === null) {
+      alert("Please upload banner by clicking on camera icon");
+      return this.setState({ loader: false });
     }
+    let task = uploadFile(
+      "banners/" + credentials.name.replace(" ", "_") + ".jpeg",
+      file
+    );
+    return task.then(snapshot => {
+      return snapshot.ref.getDownloadURL().then(downloadURL => {
+        credentials.banner = downloadURL;
+        if (credentials.banner) {
+          execApi("POST", "blogs", credentials).then(res => {
+            if (res.error) {
+              this.setState({ loader: false });
+              return console.log("Error occured", res.data);
+            }
+            this.setState({ loader: false });
+            return alert("Data added");
+          });
+        }
+      });
+    });
   };
   render() {
     let { classes, authUser } = this.props;
-    let { credentials, categories } = this.state;
+    let { credentials, categories, loader } = this.state;
     return (
       <div className="App">
         <header className="App-header">
@@ -123,8 +146,14 @@ class AddBlog extends Component {
 
         <div className={classes.container}>
           <Paper className={classes.paper}>
+            {loader ? (
+              <LinearProgress className={classes.loader} color="secondary" />
+            ) : null}
             <Grid container spacing={24}>
               <Grid item xs={12} sm={12}>
+                <Typography variant="title" style={{ textAlign: "center" }}>
+                  Add Blog
+                </Typography>
                 <div className={classes.right}>
                   <input
                     accept="image/*"
@@ -133,12 +162,12 @@ class AddBlog extends Component {
                     type="file"
                     onChange={this.handleChange("banner")}
                   />
-                  <Tooltip
-                    id="tooltip-bottom"
-                    title="Add banner"
-                    placement="bottom"
-                  >
-                    <label htmlFor="icon" className={classes.rightAlign}>
+                  <label htmlFor="banner" className={classes.rightAlign}>
+                    <Tooltip
+                      id="tooltip-bottom"
+                      title="Add banner"
+                      placement="bottom"
+                    >
                       <Icon
                         color="primary"
                         className={classes.form_icon}
@@ -146,8 +175,8 @@ class AddBlog extends Component {
                       >
                         camera_alt
                       </Icon>
-                    </label>
-                  </Tooltip>
+                    </Tooltip>
+                  </label>
                 </div>
               </Grid>
               <Grid item xs={12} sm={12}>
@@ -253,6 +282,7 @@ const styles = {
   },
   paper: {
     padding: 15,
+    position: "relative",
     flexGrow: "grow"
   },
   rightButton: {
@@ -276,6 +306,12 @@ const styles = {
   },
   right: {
     float: "right"
+  },
+  loader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%"
   }
 };
 
