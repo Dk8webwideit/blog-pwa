@@ -1,3 +1,4 @@
 node_nodules/
+dist/
 .firebaserc
 *.zip
